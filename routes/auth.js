@@ -9,20 +9,20 @@ require("dotenv").config();
 
 
 router.post("/register", async (req, res) => {
-    //code
-    
+    //code    git
+
     //Validate the user input
     const { error } = registerValidation(req.body);
 
     if (error) {
-        return res.status(400).json({ error: error.details[0]});
+        return res.status(400).json({ error: error.details[0] });
     }
 
     //Check if the email is already registered
     const emailExists = await user.findOne({ email: req.body.email });
 
     if (emailExists) {
-        return res.status(400).json({ error: "Email already exists"});
+        return res.status(400).json({ error: "Email already exists" });
     }
 
     //Hash he password
@@ -38,10 +38,10 @@ router.post("/register", async (req, res) => {
 
     try {
         const savedUser = await userObject.save();
-        res.json({ error: null, data: savedUser._id});
+        res.json({ error: null, data: savedUser._id });
     }
     catch (error) {
-        res.status(400).json({ error})
+        res.status(400).json({ error })
     }
 });
 
@@ -52,23 +52,23 @@ router.post("/login", async (req, res) => {
 
     //If login info is valid, find the user
     if (error) {
-        return res.status(400).json({ error: error.details[0].message});
+        return res.status(400).json({ error: error.details[0].message });
     }
 
     //Throw error if email is wrong (user does not exist in DB)
     const userObject = await user.findOne({ email: req.body.email });
 
     if (!userObject) {
-        return res.status(400).json({ error: "Email is wrong"});
+        return res.status(400).json({ error: "Email is wrong" });
     }
 
 
     //User exists - check for password correctness
     const validPassword = await bcrypt.compare(req.body.password, userObject.password);
-    
+
     //Throw error if password is wrong
     if (!validPassword) {
-        return res.status(400).json({ error: "Password is wrong"});
+        return res.status(400).json({ error: "Password is wrong" });
     }
 
 
@@ -80,7 +80,7 @@ router.post("/login", async (req, res) => {
         },
         //TOKEN_SECRET
         process.env.TOKEN_SECRET,
-        
+
         //EXPIRATION TIME
         { expiresIn: process.env.JWT_EXPIRES_IN },
     );
@@ -88,7 +88,7 @@ router.post("/login", async (req, res) => {
     //Attach auth token to header
     res.header("auth-token", token).json({
         error: null,
-        data: { token}
+        data: { token }
     });
 });
 
