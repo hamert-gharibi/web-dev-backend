@@ -4,6 +4,7 @@
   "description": "MongoDB-ExpressJS-NodeJS REST API",
   "main": "server.js",
   "scripts": {
+    "start": "node server.js",
     "start-dev": "cross-env NODE_ENV=development nodemon server.js",
     "test": "cross-env NODE_ENV=test mocha --exit"
   },
