@@ -10,7 +10,7 @@ let listSchema = new Schema(
 
 listSchema.pre('findOneAndUpdate', function () {
   const update = this.getUpdate();
-  if (update.__v != null) {
+  if (update.__v != null) { 
     delete update.__v;
   }
   const keys = ['$set', '$setOnInsert'];

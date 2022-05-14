@@ -13,7 +13,7 @@ let taskSchema = new Schema(
     date: { type: Date, default: Date.now }
 
   }
-);
+); 
 
 taskSchema.pre('findOneAndUpdate', function () {
   const update = this.getUpdate();
