@@ -35,7 +35,8 @@
     "nodemon": "^2.0.16",
     "swagger": "^0.7.5",
     "swagger-ui": "^4.11.1",
-    "swagger-ui-dist": "^4.11.1"
+    "swagger-ui-dist": "^4.11.1",
+    "swagger-ui-express": "^4.4.0"
   },
   "devDependencies": {
     "chai": "^4.3.6",
