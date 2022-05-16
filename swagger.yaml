@@ -63,7 +63,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/User"
+              $ref: "#/components/schemas/api/User"
 
       responses:
         201:
@@ -120,7 +120,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/task"
+                  $ref: "#/components/schemas/api/task"
     
     post:
       summary: Create a new task
@@ -132,7 +132,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/task"
+              $ref: "#/components/schemas/api/task"
 
       responses:
         201:
@@ -140,7 +140,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/task"
+                $ref: "#/components/schemas/api/task"
   
   /tasks/{id}:
     get:
@@ -161,7 +161,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/task"
+                  $ref: "#/components/schemas/api/task"
    
     put:
       summary: Updates a specific task
@@ -188,7 +188,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/task"
+                $ref: "#/components/schemas/api/task"
 
     delete:
       summary: Deletes a specific task
@@ -209,7 +209,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/task"
+                $ref: "#/components/schemas/api/task"
 
 
 
@@ -230,7 +230,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/list"
+                  $ref: "#/components/schemas/api/list"
     
     post:
       summary: Create a new list
@@ -242,7 +242,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/list"
+              $ref: "#/components/schemas/api/list"
 
       responses:
         201:
@@ -250,7 +250,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/list"
+                $ref: "#/components/schemas/api/list"
   
   /lists/{id}:
     get:
@@ -271,7 +271,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/list"
+                  $ref: "#/components/schemas/api/list"
    
     put:
       summary: Updates a specific list
@@ -290,7 +290,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/list"
+              $ref: "#/components/schemas/api/list"
 
       responses:
         201:
@@ -298,7 +298,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/list"
+                $ref: "#/components/schemas/api/list"
 
     delete:
       summary: Deletes a specific list
@@ -319,4 +319,4 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/list"
+                $ref: "#/components/schemas/api/list"
