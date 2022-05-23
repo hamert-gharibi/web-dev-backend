@@ -1,29 +1,55 @@
 const router = require("express").Router();
 const list = require("../models/list");
+const jwt = require('jsonwebtoken');
+const user = require("../models/user");
 const { verifyToken } = require("../validation")
-const Nodecache = require('node-cache');
 const NodeCache = require("node-cache");
 //stdTTL 
 const cache = new NodeCache({ stdTTL: 600 });
+// check whether the request has a valid JWT access token
 
+
+
+
+let authenticate = (req, res, next) => {
+    let token = req.header('x-access-token');
+
+    // verify the JWT
+    jwt.verify(token, user.getJWTSecret(), (err, decoded) => {
+        if (err) {
+            // there was an error
+            // jwt is invalid - * DO NOT AUTHENTICATE *
+            res.status(401).send(err);
+        } else {
+            // jwt is valid
+            req.user_id = decoded._id;
+            next();
+        }
+    });
+}
 // CRUD operations
 
 // Create list (post)
-router.post("/", (req, res) => {
+// Create product (post)
+router.post("/", authenticate, (req, res) => {
     data = req.body;
 
     list.insertMany(data)
-        .then(data => {
-            res.status(201).send(data);
-            console.log(data[0]._id.toString());
+        .then(data => { 
+            cache.flushAll(); //our cache has invalid data now, so we flush it to force rebuild.
+            res.status(201).send(data);            
         })
         .catch(err => {
             res.status(500).send({ message: err.message })
         })
 });
-
+/**
+ * POST /lists/:listId/tasks
+ * Purpose: Create a new task in a specific list
+ */
+ 
 // Read all lists (get)
-router.get("/", async (req, res) => {
+router.get("/", authenticate, async (req, res) => {
 
     try {
         //try to get data from cache
@@ -93,7 +119,7 @@ router.get("/price/:operator/:price", (req, res) => {
 
 */
 //Read specific list based on id (get)
-router.get("/:id", (req, res) => {
+router.get("/:id", authenticate, (req, res) => {
     list.findById(req.params.id)
         .then(data => { res.send(data) })
         .catch(err => {
@@ -104,7 +130,7 @@ router.get("/:id", (req, res) => {
 });
 
 // Update specific list (put)
-router.put("/:id", (req, res) => {
+router.put("/:id", authenticate, (req, res) => {
 
     const id = req.params.id;
     list.findByIdAndUpdate(id, req.body)
@@ -122,7 +148,7 @@ router.put("/:id", (req, res) => {
 });
 
 // Delete specific list (delete)
-router.delete("/:id", (req, res) => {
+router.delete("/:id", authenticate, (req, res) => {
     const id = req.params.id;
     list.findByIdAndDelete(id)
         .then(data => {
@@ -143,9 +169,10 @@ function mapArray(arr) {
     let outputArr = arr.map(element => (
         {
             id: element._id,
-            list: element.list,
+            title: element.title,
             uri: "/api/lists/" + element._id,
         }
+        
     ));
 
     return outputArr;

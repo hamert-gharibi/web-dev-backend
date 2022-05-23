@@ -1,10 +1,14 @@
 const router = require("express").Router();
 const task = require("../models/task");
-const { verifyToken } = require("../validation")
-const Nodecache = require('node-cache');
+const list = require("../models/list");
+const auth = require("./auth");
+
+const { verifyToken } = require("../validation");
 const NodeCache = require("node-cache");
+const app = require("../server");
 //stdTTL 
 const cache = new NodeCache({ stdTTL: 600 });
+
 
 // CRUD operations
 
@@ -47,21 +51,21 @@ router.get("/", async (req, res) => {
     catch (err) {
         res.status(500).send({ message: err.message })
     }
-    /*  task.find()
+      task.find()
           .then(data => {
   
               res.send(mapArray(data));
           })
           .catch(err => {
               res.status(500).send({ message: err.message })
-          })*/
+          })
 
 });
 
 //Additional routes
 //Query all tasks based on status
-/*router.get("/instock/:status", (req, res) => {
-    task.find({ inStock: req.params.status })
+router.get("/_listId/:id", (req, res) => {
+    task.find({ _listId: req.params.id })
         .then(data => {
             res.send(mapArray(data));
         })
@@ -71,7 +75,7 @@ router.get("/", async (req, res) => {
 });
 
 
-
+/*
 router.get("/price/:operator/:price", (req, res) => {
 
     const operator = req.params.operator;
@@ -104,7 +108,7 @@ router.get("/:id", (req, res) => {
 });
 
 // Update specific task (put)
-router.put("/:id", (req, res) => {
+router.put("/:id",  (req, res) => {
 
     const id = req.params.id;
     task.findByIdAndUpdate(id, req.body)
@@ -137,14 +141,54 @@ router.delete("/:id", (req, res) => {
             res.status(500).send({ message: "Error deleting task with id=" + id })
         })
 });
+/**
+ * POST /lists/:listId/tasks
+ * Purpose: Create a new task in a specific list
+ */
+ router.post('/:listId/tasks', (req, res) => {
+    // We want to create a new task in a list specified by listId
+
+    list.findOne({
+        _id: req.params.listId,
+    }).then((list) => {
+        if (list) {
+            // list object with the specified conditions was found
+            // therefore the currently authenticated user can create new tasks
+            return true;
+        }
+
+        // else - the list object is undefined
+        return false;
+    }).then((canCreateTask) => {
+        if (canCreateTask) {
+            let newTask = new task({
+                title: req.body.title,
+                _listId: req.params.listId
+            });
+            newTask.save().then((newTaskDoc) => {
+                res.send(newTaskDoc);
+            })
+        } else {
+            res.sendStatus(404);
+        }
+    })
+})
+
+
 
 function mapArray(arr) {
 
     let outputArr = arr.map(element => (
         {
             id: element._id,
-            task: element.task,
-            uri: "/api/tasks/" + element._id,
+            title: element.title, 
+            description: element.description,
+            priority: element.priority,
+            deadline: element.deadline,
+            _listId: element._listId,
+            _userId: element._userId,
+            date: element.date,
+            uri: "/api/tasks/" + element.list,
         }
     ));
 

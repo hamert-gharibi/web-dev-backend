@@ -8,89 +8,135 @@ require("dotenv").config();
 //registration
 
 
-router.post("/register", async (req, res) => {
-    //code    git
+// Verify Refresh Token Middleware (which will be verifying the session)
+let verifySession = (req, res, next) => {
+    // grab the refresh token from the request header
+    let refreshToken = req.header('x-refresh-token');
 
-    //Validate the user input
-    const { error } = registerValidation(req.body);
+    // grab the _id from the request header
+    let _id = req.header('_id');
 
-    if (error) {
-        return res.status(400).json({ error: error.details[0] });
-    }
+    User.findByIdAndToken(_id, refreshToken).then((user) => {
+        if (!user) {
+            // user couldn't be found
+            return Promise.reject({
+                'error': 'User not found. Make sure that the refresh token and user id are correct'
+            });
+        }
 
-    //Check if the email is already registered
-    const emailExists = await user.findOne({ email: req.body.email });
 
-    if (emailExists) {
-        return res.status(400).json({ error: "Email already exists" });
-    }
+        // if the code reaches here - the user was found
+        // therefore the refresh token exists in the database - but we still have to check if it has expired or not
 
-    //Hash he password
-    const salt = await bcrypt.genSalt(10);
-    const password = await bcrypt.hash(req.body.password, salt);
+        req.user_id = user._id;
+        req.userObject = user;
+        req.refreshToken = refreshToken;
 
-    //Create a user object and save in the DB
-    const userObject = new user({
-        name: req.body.name,
-        email: req.body.email,
-        password
+        let isSessionValid = false;
+
+        user.sessions.forEach((session) => {
+            if (session.token === refreshToken) {
+                // check if the session has expired
+                if (User.hasRefreshTokenExpired(session.expiresAt) === false) {
+                    // refresh token has not expired
+                    isSessionValid = true;
+                }
+            }
+        });
+
+        if (isSessionValid) {
+            // the session is VALID - call next() to continue with processing this web request
+            next();
+        } else {
+            // the session is not valid
+            return Promise.reject({
+                'error': 'Refresh token has expired or the session is invalid'
+            })
+        }
+
+    }).catch((e) => {
+        res.status(401).send(e);
+    })
+}
+
+/* END MIDDLEWARE  */
+
+/* USER ROUTES */
+
+/**
+ * POST /users
+ * Purpose: Sign up
+ */
+router.post('/register', (req, res) => {
+    // User sign up
+
+    let body = req.body;
+    let newUser = new user(body);
+
+    newUser.save().then(() => {
+        return newUser.createSession();
+    }).then((refreshToken) => {
+        // Session created successfully - refreshToken returned.
+        // now we geneate an access auth token for the user
+
+        return newUser.generateAccessAuthToken().then((accessToken) => {
+            // access auth token generated successfully, now we return an object containing the auth tokens
+            return { accessToken, refreshToken }
+        });
+    }).then((authTokens) => {
+        // Now we construct and send the response to the user with their auth tokens in the header and the user object in the body
+        res
+            .header('x-refresh-token', authTokens.refreshToken)
+            .header('x-access-token', authTokens.accessToken)
+            .send(newUser);
+    }).catch((e) => {
+        res.status(400).send(e);
+    })
+})
+
+
+/**
+ * POST /users/login
+ * Purpose: Login
+ */
+router.post('/login', (req, res) => {
+    let email = req.body.email;
+    let password = req.body.password;
+
+    user.findByCredentials(email, password).then((user) => {
+        return user.createSession().then((refreshToken) => {
+            // Session created successfully - refreshToken returned.
+            // now we geneate an access auth token for the user
+
+            return user.generateAccessAuthToken().then((accessToken) => {
+                // access auth token generated successfully, now we return an object containing the auth tokens
+                return { accessToken, refreshToken }
+            });
+        }).then((authTokens) => {
+            // Now we construct and send the response to the user with their auth tokens in the header and the user object in the body
+            res
+                .header('x-refresh-token', authTokens.refreshToken)
+                .header('x-access-token', authTokens.accessToken)
+                .send(user);
+        })
+    }).catch((e) => {
+        res.status(400).send(e);
     });
-
-    try {
-        const savedUser = await userObject.save();
-        res.json({ error: null, data: savedUser._id });
-    }
-    catch (error) {
-        res.status(400).json({ error })
-    }
-});
-
-router.post("/login", async (req, res) => {
-
-    //Validate user login info
-    const { error } = loginValidation(req.body);
-
-    //If login info is valid, find the user
-    if (error) {
-        return res.status(400).json({ error: error.details[0].message });
-    }
-
-    //Throw error if email is wrong (user does not exist in DB)
-    const userObject = await user.findOne({ email: req.body.email });
-
-    if (!userObject) {
-        return res.status(400).json({ error: "Email is wrong" });
-    }
+})
 
 
-    //User exists - check for password correctness
-    const validPassword = await bcrypt.compare(req.body.password, userObject.password);
-
-    //Throw error if password is wrong
-    if (!validPassword) {
-        return res.status(400).json({ error: "Password is wrong" });
-    }
-
-
-    //Create authentication token with username and id
-    const token = jwt.sign(
-        //Payload
-        {
-            name: userObject.name
-        },
-        //TOKEN_SECRET
-        process.env.TOKEN_SECRET,
-
-        //EXPIRATION TIME
-        { expiresIn: process.env.JWT_EXPIRES_IN },
-    );
-
-    //Attach auth token to header
-    res.header("auth-token", token).json({
-        error: null,
-        data: { token }
+/**
+ * GET /users/me/access-token
+ * Purpose: generates and returns an access token
+ */
+router.get('/me/access-token', verifySession, (req, res) => {
+    // we know that the user/caller is authenticated and we have the user_id and user object available to us
+    req.userObject.generateAccessAuthToken().then((accessToken) => {
+        res.header('x-access-token', accessToken).send({ accessToken });
+    }).catch((e) => {
+        res.status(400).send(e);
     });
-});
+})
 
 module.exports = router;
 

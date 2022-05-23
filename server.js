@@ -3,6 +3,14 @@ const mongoose = require("mongoose");
 //const bodyParser = require("body-parser");
 const app = express();
 
+// Handle CORS
+app.use(function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "GET, POST, HEAD, OPTIONS, PUT, PATCH, DELETE");
+    res.header("Access-Control-Allow-Headers", "auth-token, Origin, X-Requested-With, Content-Type, Accept, Authorization, X-access-token");
+    res.header('Access-Control-Expose-Headers','x-access-token, x-refresh-token');
+    next();
+  });
 
 require("dotenv-flow").config();
 //swagger deps
@@ -22,12 +30,7 @@ app.use(express.json());
 //app.use(bodyParser.json());
 
 
-// Handle CORS
-app.use(function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "auth-token, Origin, X-Requested-With, Content-Type, Accept");
-    next();
-  });
+
 
 
 //routes
@@ -36,14 +39,12 @@ app.get("/api/welcome", (req, res) => {
 })
 
 //import routes
-app.use("/api/tasks", taskRoutes);
+app.use("/api/lists/tasks", taskRoutes);
 app.use("/api/lists", listRoutes);
 app.use("/api/user", authRoutes);
 
 
-
-
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 
 app.listen(PORT, function () {
     console.log("Server is running on port: " + PORT)
