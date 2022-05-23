@@ -13,6 +13,11 @@ let verifySession = (req, res, next) => {
     // grab the refresh token from the request header
     let refreshToken = req.header('x-refresh-token');
 
+
+
+
+
+    
     // grab the _id from the request header
     let _id = req.header('_id');
 
