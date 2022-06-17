@@ -77,6 +77,38 @@ describe('User workflow tests', () => {
                                         done();
                                     });
                             });
+                            // 5) Create new list
+                        let list =
+                        {
+                            title: "List"
+                        };
+
+                        chai.request(server)
+                            .post('/api/lists')
+                            .set({ "auth-token": token })
+                            .send(list)
+                            .end((err, res) => {
+                                // Asserts
+                                expect(res.status).to.be.equal(201);
+                                expect(res.body).to.be.a('array');
+                                expect(res.body.length).to.be.eql(1);
+
+                                let savedlist = res.body[0];
+                                expect(savedlist.title).to.be.equal(list.title);
+
+                                // 6) Verify one list in test DB
+                                chai.request(server)
+                                    .get('/api/lists')
+                                    .end((err, res) => {
+
+                                        // Asserts
+                                        expect(res.status).to.be.equal(200);
+                                        expect(res.body).to.be.a('array');
+                                        expect(res.body.length).to.be.eql(1);
+
+                                        done();
+                                    });
+                            });
                     });
             });
     });
@@ -157,6 +189,41 @@ describe('User workflow tests', () => {
 
                             });
                     });
+                     // 5) Create new list
+                     let list =
+                     {
+                         title: "List"
+                     };
+
+                     chai.request(server)
+                         .post('/api/lists')
+                         .set({ "auth-token": token })
+                         .send(list)
+                         .end((err, res) => {
+
+                             // Asserts
+                             expect(res.status).to.be.equal(201);
+                             expect(res.body).to.be.a('array');
+                             expect(res.body.length).to.be.eql(1);
+
+                             let savedlist = res.body[0];
+                             expect(savedlist.title).to.be.equal(list.title);
+
+                             // 6) Delete list
+                             chai.request(server)
+                                 .delete('/api/lists/' + savedlist._id)
+                                 .set({ "auth-token": token })
+                                 .end((err, res) => {
+
+                                     // Asserts
+                                     expect(res.status).to.be.equal(200);
+                                     const actualVal = res.body.message;
+                                     expect(actualVal).to.be.equal('list was successfully deleted.');
+                                     done();
+                                 });
+
+                         });
+                 });
             });
     });
 

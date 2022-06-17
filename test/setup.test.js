@@ -1,6 +1,7 @@
 process.env.NODE_ENV = 'test';
 
 const task = require('../models/task');
+const task = require('../models/list');
 const User = require('../models/user');
 
 
